@@ -4,7 +4,7 @@ import { useState } from 'react'
 
 import { Button } from '@/components/button/Button'
 import { Input } from '@/components/input/Input'
-import { YTResponseData } from '@/types/yt'
+import { useGetYTTranscription } from '@/hooks/use-get-yt-transcription'
 
 const saveToFile = (data: string, filename: string) => {
   const blob = new Blob([data], { type: 'text/plain' })
@@ -17,16 +17,13 @@ const saveToFile = (data: string, filename: string) => {
 
 export default function Home() {
   const [inputValue, setInputValue] = useState<string>('')
+  const { loading, handleYTRequest } = useGetYTTranscription()
 
   const handleTranscribeDownload = async () => {
     try {
-      const res = await fetch('/api', {
-        body: JSON.stringify({ url: inputValue }),
-        method: 'POST',
-      })
-      const data: YTResponseData = await res.json()
+      const data = await handleYTRequest(inputValue)
 
-      if (data.transcription) {
+      if (data?.transcription) {
         saveToFile(
           data.transcription,
           `${data.videoId ? `${data.videoId}-` : ''}transcription.txt`,
@@ -51,7 +48,7 @@ export default function Home() {
           value={inputValue}
           onChange={e => setInputValue(e.target.value)}
         />
-        <Button onClick={handleTranscribeDownload}>
+        <Button disabled={loading} onClick={handleTranscribeDownload}>
           Download transcription
         </Button>
       </div>
