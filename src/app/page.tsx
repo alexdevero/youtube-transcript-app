@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { Button } from '@/components/button/Button'
 import { Input } from '@/components/input/Input'
 import { useGetYTTranscription } from '@/hooks/use-get-yt-transcription'
+import { isValidYoutubeVideoUrl } from '@/utils/validators'
 
 const saveToFile = (data: string, filename: string) => {
   const blob = new Blob([data], { type: 'text/plain' })
@@ -16,12 +17,19 @@ const saveToFile = (data: string, filename: string) => {
 }
 
 export default function Home() {
-  const [inputValue, setInputValue] = useState<string>('')
+  const [ytUrl, setYTUrl] = useState<string>('')
   const { loading, handleYTRequest } = useGetYTTranscription()
 
   const handleTranscribeDownload = async () => {
     try {
-      const data = await handleYTRequest(inputValue)
+      const isYTUrlValid = isValidYoutubeVideoUrl(ytUrl)
+
+      if (!isYTUrlValid) {
+        alert('Invalid Youtube URL')
+        return
+      }
+
+      const data = await handleYTRequest(ytUrl)
 
       if (data?.transcription) {
         saveToFile(
@@ -42,13 +50,22 @@ export default function Home() {
         <h1 className="text-4xl font-medium mb-8 text-gray-400">
           Youtube transcribe app
         </h1>
+
+        <p className="text-gray-400 mb-7 max-w-96 text-center">
+          Paste your Youtube video link in the input below to get its
+          transcription. The transcription will be saved as a .txt file.
+        </p>
+
         <Input
           className="mb-7"
           placeholder="Enter youtube video link"
-          value={inputValue}
-          onChange={e => setInputValue(e.target.value)}
+          value={ytUrl}
+          onChange={e => setYTUrl(e.target.value)}
         />
-        <Button disabled={loading} onClick={handleTranscribeDownload}>
+        <Button
+          disabled={loading || !ytUrl.length}
+          onClick={handleTranscribeDownload}
+        >
           Download transcription
         </Button>
       </div>
