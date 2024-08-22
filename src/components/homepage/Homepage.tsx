@@ -14,6 +14,9 @@ const saveToFile = (data: string, filename: string) => {
   a.href = url
   a.download = filename
   a.click()
+
+  window.open(url, '_blank')
+  window.URL.revokeObjectURL(url)
 }
 
 export const Homepage: FC = () => {
