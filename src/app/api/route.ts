@@ -11,26 +11,33 @@ const extractTranscription = (ytTranscription?: TranscriptResponse[]) => {
 }
 
 export async function POST(request: Request) {
-  const { url } = (await request.json()) as { url?: string }
-  const videoId = url?.split('?v=')[1]
+  try {
+    const { url } = (await request.json()) as { url?: string }
+    const videoId = url?.split('?v=')[1]
 
-  if (!videoId) {
-    return Response.json('Invalid youtube video link', {
+    if (!videoId) {
+      return Response.json('Invalid youtube video link', {
+        headers: { 'content-type': 'application/json' },
+        status: 400,
+      })
+    }
+
+    const ytTranscription = await YoutubeTranscript.fetchTranscript(videoId)
+
+    return Response.json(
+      {
+        videoId,
+        transcription: extractTranscription(ytTranscription),
+      },
+      {
+        headers: { 'content-type': 'application/json' },
+        status: 200,
+      },
+    )
+  } catch (error) {
+    return Response.json(error, {
       headers: { 'content-type': 'application/json' },
-      status: 400,
+      status: 500,
     })
   }
-
-  const ytTranscription = await YoutubeTranscript.fetchTranscript(videoId)
-
-  return Response.json(
-    {
-      videoId,
-      transcription: extractTranscription(ytTranscription),
-    },
-    {
-      headers: { 'content-type': 'application/json' },
-      status: 200,
-    },
-  )
 }
